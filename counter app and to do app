@@ -2,9 +2,11 @@
 
 import 'package:flutter/material.dart';
 
-void main() => runApp(MyCounterApp());
+void main() => runApp(const MyCounterApp());
 
 class MyCounterApp extends StatelessWidget {
+  const MyCounterApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -12,51 +14,58 @@ class MyCounterApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: CounterScreen(),
+      home: const CounterScreen(),
     );
   }
 }
 
 class CounterScreen extends StatefulWidget {
+  const CounterScreen({super.key});
   @override
-  _CounterScreenState createState() => _CounterScreenState();
+  CounterScreenState createState() => CounterScreenState();
 }
 
-class _CounterScreenState extends State<CounterScreen> {
-  List<int> _counters = [0, 0, 0]; // Start with 3 counters for example.
+class CounterScreenState extends State<CounterScreen> {
+  List<int> counters = [0]; // Start with 1 counter for example.
 
   void _incrementCounter(int index) {
     setState(() {
-      _counters[index]++;
+      counters[index]++;
     });
   }
 
   void _decrementCounter(int index) {
     setState(() {
-      if (_counters[index] > 0) _counters[index]--;
+      if (counters[index] > 0) counters[index]--;
     });
   }
 
   void _resetCounter(int index) {
     setState(() {
-      _counters[index] = 0;
+      counters[index] = 0;
+    });
+  }
+
+  void _removeCounter(int index) {
+    setState(() {
+      counters.removeAt(index);
     });
   }
 
   Widget _buildCounter(int index) {
     return Card(
-      margin: EdgeInsets.all(8.0),
+      margin: const EdgeInsets.all(8.0),
       child: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: <Widget>[
             Text(
               'Counter ${index + 1} value:',
-              style: Theme.of(context).textTheme.subtitle1,
+              style: Theme.of(context).textTheme.titleMedium,
             ),
             Text(
-              '${_counters[index]}',
-              style: Theme.of(context).textTheme.headline4,
+              '${counters[index]}',
+              style: Theme.of(context).textTheme.headlineMedium,
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -64,18 +73,26 @@ class _CounterScreenState extends State<CounterScreen> {
                 FloatingActionButton(
                   onPressed: () => _decrementCounter(index),
                   tooltip: 'Decrement',
-                  child: Icon(Icons.remove),
+                  child: const Icon(Icons.remove),
                 ),
                 FloatingActionButton(
                   onPressed: () => _resetCounter(index),
                   tooltip: 'Reset',
-                  child: Icon(Icons.exposure_zero),
+                  child: const Icon(Icons.exposure_zero),
                 ),
                 FloatingActionButton(
                   onPressed: () => _incrementCounter(index),
                   tooltip: 'Increment',
-                  child: Icon(Icons.add),
+                  child: const Icon(Icons.add),
                 ),
+                if (counters.length >
+                    1) // Only show the remove button if there's more than one counter
+                  FloatingActionButton(
+                    onPressed: () => _removeCounter(index),
+                    tooltip: 'Remove',
+                    backgroundColor: Colors.red,
+                    child: const Icon(Icons.delete),
+                  ),
               ],
             )
           ],
@@ -88,10 +105,10 @@ class _CounterScreenState extends State<CounterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Multi Counter App'),
+        title: const Text('Multi Counter App'),
       ),
       body: ListView.builder(
-        itemCount: _counters.length,
+        itemCount: counters.length,
         itemBuilder: (context, index) {
           return _buildCounter(index);
         },
@@ -99,16 +116,17 @@ class _CounterScreenState extends State<CounterScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            _counters.add(0); // Adds a new counter with initial value 0.
+            counters.add(0); // Adds a new counter with initial value 0.
           });
         },
         tooltip: 'Add Counter',
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
 }
 
+--------------------------------------------------------------------------------------------------------------------
 ###TO DO app
 import 'package:flutter/material.dart';
 
