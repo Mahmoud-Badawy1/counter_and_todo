@@ -1,0 +1,233 @@
+###counter app
+
+import 'package:flutter/material.dart';
+
+void main() => runApp(MyCounterApp());
+
+class MyCounterApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Multi Counter App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: CounterScreen(),
+    );
+  }
+}
+
+class CounterScreen extends StatefulWidget {
+  @override
+  _CounterScreenState createState() => _CounterScreenState();
+}
+
+class _CounterScreenState extends State<CounterScreen> {
+  List<int> _counters = [0, 0, 0]; // Start with 3 counters for example.
+
+  void _incrementCounter(int index) {
+    setState(() {
+      _counters[index]++;
+    });
+  }
+
+  void _decrementCounter(int index) {
+    setState(() {
+      if (_counters[index] > 0) _counters[index]--;
+    });
+  }
+
+  void _resetCounter(int index) {
+    setState(() {
+      _counters[index] = 0;
+    });
+  }
+
+  Widget _buildCounter(int index) {
+    return Card(
+      margin: EdgeInsets.all(8.0),
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          children: <Widget>[
+            Text(
+              'Counter ${index + 1} value:',
+              style: Theme.of(context).textTheme.subtitle1,
+            ),
+            Text(
+              '${_counters[index]}',
+              style: Theme.of(context).textTheme.headline4,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                FloatingActionButton(
+                  onPressed: () => _decrementCounter(index),
+                  tooltip: 'Decrement',
+                  child: Icon(Icons.remove),
+                ),
+                FloatingActionButton(
+                  onPressed: () => _resetCounter(index),
+                  tooltip: 'Reset',
+                  child: Icon(Icons.exposure_zero),
+                ),
+                FloatingActionButton(
+                  onPressed: () => _incrementCounter(index),
+                  tooltip: 'Increment',
+                  child: Icon(Icons.add),
+                ),
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Multi Counter App'),
+      ),
+      body: ListView.builder(
+        itemCount: _counters.length,
+        itemBuilder: (context, index) {
+          return _buildCounter(index);
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            _counters.add(0); // Adds a new counter with initial value 0.
+          });
+        },
+        tooltip: 'Add Counter',
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+###TO DO app
+import 'package:flutter/material.dart';
+
+class TodoItem {
+  String title;
+  bool isDone;
+
+  TodoItem({required this.title, this.isDone = false});
+}
+
+class TodoListManager {
+  ValueNotifier<List<TodoItem>> todoListNotifier = ValueNotifier([]);
+
+  void addItem(TodoItem item) {
+    todoListNotifier.value.add(item);
+    todoListNotifier.notifyListeners();
+  }
+
+  void toggleDone(int index) {
+    var item = todoListNotifier.value[index];
+    item.isDone = !item.isDone;
+    todoListNotifier.notifyListeners();
+  }
+}
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter To-Do App',
+      home: TodoApp(),
+    );
+  }
+}
+
+class TodoApp extends StatefulWidget {
+  @override
+  _TodoAppState createState() => _TodoAppState();
+}
+
+class _TodoAppState extends State<TodoApp> {
+  final TodoListManager _manager = TodoListManager();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('To-Do App'),
+      ),
+      body: ValueListenableBuilder(
+        valueListenable: _manager.todoListNotifier,
+        builder: (context, List<TodoItem> todos, _) {
+          return ListView.builder(
+            itemCount: todos.length,
+            itemBuilder: (context, index) {
+              var todo = todos[index];
+              return InkWell(
+                onTap: () {
+                  _manager.toggleDone(index);
+                },
+                child: ListTile(
+                  title: Text(
+                    todo.title,
+                    style: TextStyle(
+                      decoration:
+                          todo.isDone ? TextDecoration.lineThrough : null,
+                    ),
+                  ),
+                  trailing: Checkbox(
+                    value: todo.isDone,
+                    onChanged: (bool? value) {
+                      _manager.toggleDone(index);
+                    },
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              TextEditingController _textFieldController =
+                  TextEditingController();
+              return AlertDialog(
+                title: const Text("Add a new Todo"),
+                content: TextField(
+                  controller: _textFieldController,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    hintText: 'Enter something to do...',
+                  ),
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    child: const Text("Add"),
+                    onPressed: () {
+                      if (_textFieldController.text.isNotEmpty) {
+                        _manager.addItem(
+                            TodoItem(title: _textFieldController.text));
+                      }
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+ -----------------------------------------
