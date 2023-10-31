@@ -1,0 +1,230 @@
+import 'package:flutter/material.dart';
+
+class TodoItem {
+  String title;
+  bool isDone;
+
+  TodoItem({required this.title, this.isDone = false});
+}
+
+class TodoListManager {
+  ValueNotifier<List<TodoItem>> todoListNotifier = ValueNotifier([]);
+  ValueNotifier<List<String>> searchHistoryNotifier = ValueNotifier([]);
+
+  void addItem(TodoItem item) {
+    todoListNotifier.value.add(item);
+    todoListNotifier.notifyListeners();
+  }
+
+  void removeItem(int index) {
+    todoListNotifier.value.removeAt(index);
+    todoListNotifier.notifyListeners();
+  }
+
+  void toggleDone(int index) {
+    var item = todoListNotifier.value[index];
+    item.isDone = !item.isDone;
+    todoListNotifier.notifyListeners();
+  }
+
+  void addToSearchHistory(String searchItem) {
+    searchHistoryNotifier.value.add(searchItem);
+    searchHistoryNotifier.notifyListeners();
+  }
+}
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter To-Do App',
+      home: TodoApp(),
+    );
+  }
+}
+
+class TodoApp extends StatefulWidget {
+  @override
+  TodoAppState createState() => TodoAppState();
+}
+
+class TodoAppState extends State<TodoApp> {
+  final TodoListManager manager = TodoListManager();
+  final TextEditingController _searchController = TextEditingController();
+  String filter = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() {
+        filter = _searchController.text;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('To-Do App'),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () {
+              // Show search history in a simple dialog
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text('Search History'),
+                    content: Container(
+                      // Set a specific size for the AlertDialog content
+                      width: double
+                          .maxFinite, // or you can use a specific width like 300.0
+                      height: 300.0, // example height, change it as you need
+                      child: ValueListenableBuilder(
+                        valueListenable: manager.searchHistoryNotifier,
+                        builder: (context, List<String> history, _) {
+                          return ListView.builder(
+                            itemCount: history.length,
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                title: Text(history[index]),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              // Set up a search field in a dialog
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text('Search To-Do'),
+                    content: TextField(
+                      controller: _searchController,
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter search term...',
+                      ),
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        child: const Text("Search"),
+                        onPressed: () {
+                          manager.addToSearchHistory(_searchController.text);
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+      body: ValueListenableBuilder(
+        valueListenable: manager.todoListNotifier,
+        builder: (context, List<TodoItem> todos, _) {
+          return ListView.builder(
+            itemCount: todos.length,
+            itemBuilder: (context, index) {
+              var todo = todos[index];
+              return filter == "" ||
+                      todo.title.toLowerCase().contains(filter.toLowerCase())
+                  ? Dismissible(
+                      key: Key(todo.title),
+                      onDismissed: (direction) {
+                        manager.removeItem(index);
+                      },
+                      background: Container(color: Colors.red),
+                      child: ListTile(
+                        title: Text(
+                          todo.title,
+                          style: TextStyle(
+                            decoration:
+                                todo.isDone ? TextDecoration.lineThrough : null,
+                          ),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Checkbox(
+                              value: todo.isDone,
+                              onChanged: (bool? value) {
+                                manager.toggleDone(index);
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                manager.removeItem(index);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : Container();
+            },
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              TextEditingController textFieldController =
+                  TextEditingController();
+              return AlertDialog(
+                title: const Text("Add a new Todo"),
+                content: TextField(
+                  controller: textFieldController,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    hintText: 'Enter something to do...',
+                  ),
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    child: const Text("Add"),
+                    onPressed: () {
+                      if (textFieldController.text.isNotEmpty) {
+                        manager
+                            .addItem(TodoItem(title: textFieldController.text));
+                        Navigator.of(context).pop();
+                      }
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
